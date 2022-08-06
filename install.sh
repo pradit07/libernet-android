@@ -10,7 +10,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 HOME="/data/adb"
-ARCH="$(grep 'DISTRIB_ARCH' /etc/openwrt_release | awk -F '=' '{print $2}' | sed "s/'//g")"
+ARCH="$(grep arm_arm1176jzf-s_vfp | awk -F '=' '{print $2}' | sed "s/'//g")"
 LIBERNET_DIR="${HOME}/libernet"
 LIBERNET_WWW="/www/libernet"
 STATUS_LOG="${LIBERNET_DIR}/log/status.log"
@@ -31,7 +31,7 @@ function install_proprietary_binaries() {
   echo -e "Installing proprietary binaries"
   while IFS= read -r line; do
     if ! which ${line} > /dev/null 2>&1; then
-      bin="/usr/bin/${line}"
+      bin="data/adb/libernet/usr/bin/${line}"
       echo "Installing ${line} ..."
       curl -sLko "${bin}" "https://github.com/lutfailham96/libernet-proprietary/raw/main/${ARCH}/binaries/${line}"
       chmod +x "${bin}"
@@ -70,20 +70,20 @@ function install_requirements() {
 }
 
 function enable_uhttp_php() {
-  if ! grep -q ".php=/usr/bin/php-cgi" /etc/config/uhttpd; then
+  if ! grep -q ".php=/usr/bin/php-cgi" /data/etc/config/uhttpd; then
     echo -e "Enabling uhttp php execution" \
-      && uci set uhttpd.main.interpreter='.php=/usr/bin/php-cgi' \
+      && uci set uhttpd.main.interpreter='.php=/data/usr/bin/php-cgi' \
       && uci add_list uhttpd.main.index_page='index.php' \
       && uci commit uhttpd \
       && echo -e "Restarting uhttp service" \
-      && /etc/init.d/uhttpd restart
+      && /data/etc/init.d/uhttpd restart
   else
     echo -e "uhttp php already enabled, skipping ..."
   fi
 }
 
 function add_libernet_environment() {
-  if ! grep -q LIBERNET_DIR /etc/profile; then
+  if ! grep -q LIBERNET_DIR /data/etc/profile; then
     echo -e "Adding Libernet environment" \
       && echo -e "\n# Libernet\nexport LIBERNET_DIR=${LIBERNET_DIR}" | tee -a '/etc/profile'
   fi
@@ -143,13 +143,13 @@ function configure_libernet_service() {
   echo -e "Configuring Libernet service"
   # disable services startup
   # DoT
-  /etc/init.d/stubby disable
+  /data/etc/init.d/stubby disable
   # shadowsocks
-  /etc/init.d/shadowsocks-libev disable
+  /data/etc/init.d/shadowsocks-libev disable
   # openvpn
-  /etc/init.d/openvpn disable
+  /data/etc/init.d/openvpn disable
   # stunnel
-  /etc/init.d/stunnel disable
+  /data/etc/init.d/stunnel disable
 }
 
 function setup_system_logs() {
